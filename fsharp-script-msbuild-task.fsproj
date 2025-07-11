@@ -6,11 +6,32 @@
     <RootNamespace>fsharp_script_msbuild_task</RootNamespace>
   </PropertyGroup>
 
-  <Target Name="CompileTaskScript" BeforeTargets="Build" Inputs="SomeMsBuildTask.fsx" Outputs="temp/SomeMsbuildTask.dll">
-    <Exec Command="dotnet fspack SomeMsBuildTask.fsx -o temp -f $(TargetFramework)" />
+  <PropertyGroup>
+    <TaskOutputDir>$(BaseIntermediateOutputPath)/tasks</TaskOutputDir>
+    <ScriptTaskName>SomeMsBuildTask</ScriptTaskName>
+    <ScriptTaskAssemblyName>$(ScriptTaskName).dll</ScriptTaskAssemblyName>
+    <ScriptTaskAssemblyPath>$(TaskOutputDir)/$(ScriptTaskAssemblyName)</ScriptTaskAssemblyPath>
+    <ScriptTaskFsx>$(ScriptTaskName).fsx</ScriptTaskFsx>
+  </PropertyGroup>
+
+  <Target Name="CompileTaskScript" BeforeTargets="BeforeBuild" Inputs="$(ScriptTaskFsx)"
+    Outputs="$(ScriptTaskAssemblyPath)">
+    <Exec Command="dotnet fspack $(ScriptTaskFsx) -o $(TaskOutputDir) -f $(TargetFramework)" />
+
+    <ItemGroup>
+      <!-- Not working, requires https://github.com/dotnet/msbuild/pull/12096 -->
+      <GeneratedTaskFiles Include="$(TaskOutputDir)/**/*.*" />
+      <FileWrites Include="@(GeneratedTaskFiles)" />
+    </ItemGroup>
   </Target>
 
-  <UsingTask TaskName="SomeMsbuildTask.FSharpTask" AssemblyFile="$(MSBuildThisFileDirectory)/temp/SomeMsbuildTask.dll" />
+    <!-- Hack for https://github.com/dotnet/msbuild/pull/12096 -->
+  <Target Name="CleanTaskOutputDir" AfterTargets="Clean">
+    <RemoveDir Directories="$(TaskOutputDir)" Condition="Exists('$(TaskOutputDir)')" />
+  </Target>
+
+
+  <UsingTask TaskName="SomeMsbuildTask.FSharpTask" AssemblyFile="$(ScriptTaskAssemblyPath)" />
 
   <Target Name="RunFSharpScriptTask" AfterTargets="Build">
     <FSharpTask Property1="Value1" Property2="2">

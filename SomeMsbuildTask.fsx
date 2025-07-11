@@ -10,7 +10,6 @@ type FSharpTask() =
 
     [<Required>]
     member val Property1 = "" with get, set
-    
     member val Property2 = 0 with get, set
     [<Output>]
     member val Result = "" with get, set
@@ -23,7 +22,7 @@ type FSharpTask() =
                 false
             else
                 this.Log.LogMessage($"Property1: {this.Property1}, Property2: {this.Property2}")
-                this.Result <- "Task executed successfully."
+                this.Result <- $"Task executed successfully. Property1: {this.Property1}, Property2: {this.Property2}"
                 true
         with
         | ex ->
