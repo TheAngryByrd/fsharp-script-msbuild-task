@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>fsharp_script_msbuild_task</RootNamespace>
+  </PropertyGroup>
+
+  <Target Name="CompileTaskScript" BeforeTargets="Build" Inputs="SomeMsBuildTask.fsx" Outputs="temp/SomeMsbuildTask.dll">
+    <Exec Command="dotnet fspack SomeMsBuildTask.fsx -o temp -f $(TargetFramework)" />
+  </Target>
+
+  <UsingTask TaskName="SomeMsbuildTask.FSharpTask" AssemblyFile="$(MSBuildThisFileDirectory)/temp/SomeMsbuildTask.dll" />
+
+  <Target Name="RunFSharpScriptTask" AfterTargets="Build">
+    <FSharpTask Property1="Value1" Property2="2">
+      <Output TaskParameter="Result" PropertyName="FSharpTaskResult" />
+    </FSharpTask>
+    <Message Text="F# Task Result: $(FSharpTaskResult)" Importance="high" />
+  </Target>
+
+  <ItemGroup>
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+</Project>
